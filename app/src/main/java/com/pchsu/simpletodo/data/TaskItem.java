@@ -1,10 +1,19 @@
 package com.pchsu.simpletodo.data;
 
-public class TaskItem {
+import com.activeandroid.Model;
+import com.activeandroid.annotation.Column;
+import com.activeandroid.annotation.Table;
 
+@Table(name = "Items")
+public class TaskItem extends Model{
+
+    @Column(name = "Title", index = true, unique = true, onUniqueConflict = Column.ConflictAction.IGNORE)
     String mTitle;
+    @Column(name = "Note", index = true)
     String mNote;
+    @Column(name = "Date", index = true)
     String mDate;
+    @Column(name = "Priority", index = true)
     int mPriority;
 
     // constants
@@ -19,6 +28,10 @@ public class TaskItem {
         item.mDate = date;
         item.mPriority = priority;
         return item;
+    }
+
+    public TaskItem(){
+        super();
     }
 
     public String getTitle() {
@@ -41,7 +54,7 @@ public class TaskItem {
         return mPriority;
     }
 
-    public void setPriority(Integer i) {
+    public void setPriority(int i) {
         this.mPriority = i;
     }
 
@@ -51,5 +64,23 @@ public class TaskItem {
 
     public void setDate(String date) {
         mDate = date;
+    }
+
+    public static int priority_string_to_index (String str){
+        int priority;
+        switch(str){
+            case "LOW":
+                priority = PRIORITY_LOW;
+                break;
+            case "MEDIUM":
+                priority = PRIORITY_MED;
+                break;
+            case "HIGH":
+                priority = PRIORITY_HIGH;
+                break;
+            default:
+                priority = PRIORITY_LOW;
+        }
+        return priority;
     }
 }

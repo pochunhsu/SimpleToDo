@@ -11,14 +11,14 @@ import android.widget.TextView;
 import com.pchsu.simpletodo.R;
 import com.pchsu.simpletodo.data.TaskItem;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class ItemListAdapter extends BaseAdapter {
 
     private Context mContext;
-    private ArrayList<TaskItem> mItems;
+    private List<TaskItem> mItems;
 
-    public ItemListAdapter(Context context, ArrayList<TaskItem> items){
+    public ItemListAdapter(Context context, List<TaskItem> items){
         mContext = context;
         mItems = items;
     }
