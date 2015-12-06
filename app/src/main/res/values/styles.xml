@@ -1,8 +1,17 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+    <style name="AppTheme" parent="@android:style/Theme.Holo.DialogWhenLarge">
+        <!--<item name="android:dropDownListViewStyle">@style/MyDropDownListView</item>>-->
+        <item name="android:spinnerDropDownItemStyle">@style/MySpinnerDropDownItem</item>
     </style>
-
+<!--
+    <style name="MyDropDownListView" parent="android:style/Widget.Holo.ListView.DropDown">
+        <item name="android:listSelector">@drawable/spinner_item_style</item>
+    </style>
+-->
+    <style name="MySpinnerDropDownItem" parent="@android:style/Widget.Holo.DropDownItem.Spinner">
+        <item name="android:background">@drawable/spinner_item_style</item>
+        <item name="android:checkMark">@null</item>
+    </style>
 </resources>

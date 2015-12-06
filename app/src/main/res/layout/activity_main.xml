@@ -14,9 +14,27 @@
     <ImageButton
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_add_white_48dp"
         android:id="@+id/button_add"
+        android:src="@drawable/ic_add_white_48dp"
+        android:background="@drawable/button_shape"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"/>
+        android:layout_centerHorizontal="true"
+        android:padding="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginLeft="20dp"/>
 
+    <!-- for debug use
+        <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/itemCount"
+        android:layout_alignTop="@+id/button_add"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:textSize="30sp"
+        android:textColor="@android:color/white"
+        tools:text="123"/>
+    -->
 </RelativeLayout>

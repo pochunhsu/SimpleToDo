@@ -7,7 +7,7 @@ import com.activeandroid.annotation.Table;
 @Table(name = "Items")
 public class TaskItem extends Model{
 
-    @Column(name = "Title", index = true, unique = true, onUniqueConflict = Column.ConflictAction.IGNORE)
+    @Column(name = "Title", index = true, unique = true, onUniqueConflict = Column.ConflictAction.FAIL)
     String mTitle;
     @Column(name = "Note", index = true)
     String mNote;
@@ -69,13 +69,13 @@ public class TaskItem extends Model{
     public static int priority_string_to_index (String str){
         int priority;
         switch(str){
-            case "LOW":
+            case "Low":
                 priority = PRIORITY_LOW;
                 break;
-            case "MEDIUM":
+            case "Medium":
                 priority = PRIORITY_MED;
                 break;
-            case "HIGH":
+            case "High":
                 priority = PRIORITY_HIGH;
                 break;
             default:

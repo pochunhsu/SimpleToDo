@@ -33,6 +33,7 @@ import butterknife.ButterKnife;
 public class MainActivity extends FragmentActivity implements ItemEditFragment.Communication{
 
     @Bind(R.id.button_add) ImageButton mButtonAdd;
+    //@Bind(R.id.itemCount) TextView mItemCount;
 
     List<TaskItem> mItems;
     ItemListAdapter mAdapter;
@@ -45,17 +46,15 @@ public class MainActivity extends FragmentActivity implements ItemEditFragment.C
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        TaskItem a = TaskItem.newInstance("buy book", "no note", "2015-12-12", TaskItem.PRIORITY_HIGH);
+       /* TaskItem a = TaskItem.newInstance("buy book", "no note", "2015-12-12", TaskItem.PRIORITY_HIGH);
         TaskItem b = TaskItem.newInstance("take exam", "no note", "2016-03-01", TaskItem.PRIORITY_LOW);
         TaskItem c = TaskItem.newInstance("xmas", "no note", "2015-12-25", TaskItem.PRIORITY_MED);
-        a.save(); b.save(); c.save();
+        a.save(); b.save(); c.save();*/
 
         mItems = new Select()
                 .from(TaskItem.class)
                 .orderBy("Priority DESC")
                 .execute();
-
-        //mItems.add(a); mItems.add(b); mItems.add(c);
 
         mListView = (SwipeMenuListView) findViewById(R.id.listView);
         mAdapter = new ItemListAdapter(this, mItems);
@@ -96,7 +95,8 @@ public class MainActivity extends FragmentActivity implements ItemEditFragment.C
                     case 0:
                         new Delete().from(TaskItem.class).where("Title = ?", mItems.get(position).getTitle()).execute();
                         mItems.remove(position);
-                        notify_data_change();
+                        mAdapter.notifyDataSetChanged();
+                        //mItemCount.setText(mItems.size() + "");
                         break;
                     default:
                         break;
@@ -147,18 +147,18 @@ public class MainActivity extends FragmentActivity implements ItemEditFragment.C
         if (id == R.id.menu_deleteAll) {   // delete all the items in db
             new Delete().from(TaskItem.class).execute();
             mItems.clear();
-            notify_data_change();
-            return true;
-        }
-
-        if (id == R.id.menu_about) {
+            mAdapter.notifyDataSetChanged();
+            //mItemCount.setText(mItems.size()+"");
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    public void notify_data_change (){
+    public void updateItemList (List<TaskItem> items){
+        mItems.clear();
+        mItems.addAll(items);
+        //mItemCount.setText(mItems.size()+"");
         mAdapter.notifyDataSetChanged();
     }
 }

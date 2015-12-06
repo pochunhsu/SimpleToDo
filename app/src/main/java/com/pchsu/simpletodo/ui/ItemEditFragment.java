@@ -1,18 +1,22 @@
 package com.pchsu.simpletodo.ui;
 
 import android.app.Activity;
-import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.activeandroid.query.Select;
@@ -22,6 +26,7 @@ import com.pchsu.simpletodo.data.TaskItem;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -30,19 +35,15 @@ public class ItemEditFragment extends DialogFragment {
 
     public static final String TAG_TITLE  = "TITLE";
 
-    @Bind(R.id.edit_title)
-    EditText mEditTitle;
-    @Bind(R.id.priority_spinner)
-    Spinner mSpinnerPriority;
+    @Bind(R.id.edit_title) EditText mEditTitle;
+    @Bind(R.id.priority_spinner) Spinner mSpinnerPriority;
     @Bind(R.id.edit_note) EditText mEditNote;
-    @Bind(R.id.datePicker)
-    DatePicker mDatePicker;
-    @Bind(R.id.button_save)
-    Button mButtonSave;
+    @Bind(R.id.datePicker) DatePicker mDatePicker;
+    @Bind(R.id.button_save) ImageButton mButtonSave;
 
-    String mDateString;
     TaskItem mItem;
     Communication mCallback;
+    boolean mIsNew;
 
     static public ItemEditFragment newInstance (String title){
         ItemEditFragment f = new ItemEditFragment();
@@ -54,27 +55,6 @@ public class ItemEditFragment extends DialogFragment {
 
         return f;
     }
-
-    // TODO timing ??? before SAVE ?
-    private DatePickerDialog.OnDateSetListener datePickerListener
-            = new DatePickerDialog.OnDateSetListener() {
-
-        // when dialog box is closed, below method will be called.
-        public void onDateSet(DatePicker datePicker, int selectedYear,
-                              int selectedMonth, int selectedDay) {
-
-            int   day  = datePicker.getDayOfMonth();
-            int   month= datePicker.getMonth();
-            int   year = datePicker.getYear();
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(year + 1900, month, day);
-
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-            dateFormat.setTimeZone(calendar.getTimeZone());
-            mDateString = dateFormat.format(calendar.getTime());
-        }
-    };
 
     @Override
     public void onAttach(Activity activity) {
@@ -90,11 +70,30 @@ public class ItemEditFragment extends DialogFragment {
         }
     }
 
+    @Override
+    @NonNull public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Dialog dialog = super.onCreateDialog(savedInstanceState);
+
+        // request a window without the title
+        dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+        return dialog;
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        super.onCreateView(inflater, container, savedInstanceState);
+        View v = inflater.inflate(R.layout.item_editor, container, false);
+        ButterKnife.bind(this, v);
+
+        return v;
+    }
+
     // make the dialog full screen
     @Override
     public void onStart()
     {
         super.onStart();
+
         Dialog dialog = getDialog();
         if (dialog != null)
         {
@@ -105,21 +104,33 @@ public class ItemEditFragment extends DialogFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        super.onCreateView(inflater, container, savedInstanceState);
-        View v = inflater.inflate(R.layout.item_editor, container, false);
-        ButterKnife.bind(this, v);
-
+    public void onResume() {
+        super.onResume();
         // set up the spinner for priority selection
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(),
                 R.array.priority_choices, R.layout.spinner_item);
-        adapter.setDropDownViewResource(R.layout.spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSpinnerPriority.setAdapter(adapter);
+        mSpinnerPriority.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                TextView selectedText = (TextView) parent.getChildAt(0);
+                if (selectedText != null) {
+                    selectedText.setTextColor(Color.WHITE);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        }) ;
 
         // read parameter and look up item instance in db
         String title = getArguments().getString(TAG_TITLE);
         if (title == null){  // (1) adding new Item case
             mItem = new TaskItem();
+            mIsNew = true;
         }else{               // (2) modifying old item case
             mItem = new Select()
                     .from(TaskItem.class)
@@ -134,6 +145,7 @@ public class ItemEditFragment extends DialogFragment {
                 mSpinnerPriority.setSelection(mItem.getPriority());
                 mEditNote.setText(mItem.getNote());
                 setDatePicker(mItem.getDate());
+                mIsNew = false;
             }
         }
 
@@ -141,17 +153,45 @@ public class ItemEditFragment extends DialogFragment {
         mButtonSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // check if the newly added item title already exists in db
+                // if so, skip the insertion and post warning message
+                String title = mEditTitle.getText().toString();
+                if (mIsNew){
+                    TaskItem item = new Select()
+                            .from(TaskItem.class)
+                            .where("Title = ?", title)
+                            .orderBy("RANDOM()")
+                            .executeSingle();
+                    if (item != null){
+                        Toast.makeText(getActivity(), "Warning: " + title + " already in db!\nInsertion skipped.", Toast.LENGTH_SHORT).show();
+                        dismiss();
+                        return;
+                    }
+                }
+
+                if(title.equals("")){
+                    Toast.makeText(getActivity(), "Warning: please specify title!\nInsertion skipped.", Toast.LENGTH_SHORT).show();
+                    dismiss();
+                    return;
+                }
+
+                // insertion happens here
                 mItem.setTitle(mEditTitle.getText().toString());
                 mItem.setNote(mEditNote.getText().toString());
                 int priority = TaskItem.priority_string_to_index(mSpinnerPriority.getSelectedItem().toString());
                 mItem.setPriority(priority);
                 mItem.setDate(getDateString());
                 mItem.save();
-                mCallback.notify_data_change();
+
+                List<TaskItem> items = new Select()
+                        .from(TaskItem.class)
+                        .orderBy("Priority DESC")
+                        .execute();
+                //Toast.makeText(getActivity(), items.size() +"" , Toast.LENGTH_SHORT).show();
+                mCallback.updateItemList(items);
                 dismiss();
             }
         });
-        return v;
     }
 
     private String getDateString(){
@@ -160,23 +200,23 @@ public class ItemEditFragment extends DialogFragment {
         int   year = mDatePicker.getYear();
 
         Calendar calendar = Calendar.getInstance();
-        calendar.set(year + 1900, month, day);
+        calendar.set(year, month, day);
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy");
         dateFormat.setTimeZone(calendar.getTimeZone());
         return dateFormat.format(calendar.getTime());
     }
 
     private void setDatePicker(String str){
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy");
         Calendar calendar = Calendar.getInstance();
         try {
             calendar.setTime(dateFormat.parse(str));
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        int year = calendar.get(Calendar.YEAR) - 1990;
+        int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
         mDatePicker.updateDate( year, month, day);
@@ -184,6 +224,6 @@ public class ItemEditFragment extends DialogFragment {
     }
 
     public interface Communication {
-        void notify_data_change();
+        void updateItemList (List<TaskItem> items);
     }
 }
