@@ -1,5 +1,5 @@
 # SimpleToDo
-A simple todo list app provides these functionality:
+A simple todo list app provides these functions:
   - Add new items with title, priority, note, and due date.
   - Edit items by clicking the item in the list
   - Delete items (sliding item left would show the delete button)
