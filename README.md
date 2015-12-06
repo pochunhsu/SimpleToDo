@@ -5,4 +5,4 @@ A simple todo list app provides these functionality:
   - Delete items (sliding item left would show the delete button)
   - Clear all items (menu option at the top right corner)
    
-![alt tag](demo/record.gif)
+![alt tag](demo/demo.gif)
