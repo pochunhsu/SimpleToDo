@@ -1,18 +1,20 @@
 package com.pchsu.simpletodo.ui;
 
+import android.annotation.TargetApi;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.activeandroid.query.Delete;
@@ -30,9 +32,9 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class MainActivity extends FragmentActivity implements ItemEditFragment.Communication{
+public class MainActivity extends AppCompatActivity implements ItemEditFragment.Communication{
 
-    @Bind(R.id.button_add) ImageButton mButtonAdd;
+    @Bind(R.id.button_add) FloatingActionButton mButtonAdd;
     //@Bind(R.id.itemCount) TextView mItemCount;
 
     List<TaskItem> mItems;
@@ -40,6 +42,7 @@ public class MainActivity extends FragmentActivity implements ItemEditFragment.C
     SwipeMenuListView mListView;
     SwipeMenuCreator mCreator;
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,13 +108,13 @@ public class MainActivity extends FragmentActivity implements ItemEditFragment.C
             }
         });
 
+        // set button action
         mButtonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showEditView(null);
             }
         });
-
     }
 
     private void showEditView(String title){

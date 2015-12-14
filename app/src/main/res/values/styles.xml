@@ -1,9 +1,10 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="@android:style/Theme.Holo.DialogWhenLarge">
+    <style name="AppTheme" parent="Theme.AppCompat">
         <!--<item name="android:dropDownListViewStyle">@style/MyDropDownListView</item>>-->
         <item name="android:spinnerDropDownItemStyle">@style/MySpinnerDropDownItem</item>
+        <item name="colorAccent">#64DD17</item>
     </style>
 <!--
     <style name="MyDropDownListView" parent="android:style/Widget.Holo.ListView.DropDown">

@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,9 +13,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,9 +22,6 @@ import com.activeandroid.query.Select;
 import com.pchsu.simpletodo.R;
 import com.pchsu.simpletodo.data.TaskItem;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.List;
 
 import butterknife.Bind;
@@ -38,8 +34,8 @@ public class ItemEditFragment extends DialogFragment {
     @Bind(R.id.edit_title) EditText mEditTitle;
     @Bind(R.id.priority_spinner) Spinner mSpinnerPriority;
     @Bind(R.id.edit_note) EditText mEditNote;
-    @Bind(R.id.datePicker) DatePicker mDatePicker;
-    @Bind(R.id.button_save) ImageButton mButtonSave;
+  //  @Bind(R.id.datePicker) DatePicker mDatePicker;
+    @Bind(R.id.button_save) FloatingActionButton mButtonSave;
 
     TaskItem mItem;
     Communication mCallback;
@@ -144,7 +140,7 @@ public class ItemEditFragment extends DialogFragment {
                 mEditTitle.setText(mItem.getTitle());
                 mSpinnerPriority.setSelection(mItem.getPriority());
                 mEditNote.setText(mItem.getNote());
-                setDatePicker(mItem.getDate());
+                //setDatePicker(mItem.getDate());
                 mIsNew = false;
             }
         }
@@ -180,7 +176,7 @@ public class ItemEditFragment extends DialogFragment {
                 mItem.setNote(mEditNote.getText().toString());
                 int priority = TaskItem.priority_string_to_index(mSpinnerPriority.getSelectedItem().toString());
                 mItem.setPriority(priority);
-                mItem.setDate(getDateString());
+                //mItem.setDate(getDateString());
                 mItem.save();
 
                 List<TaskItem> items = new Select()
@@ -193,7 +189,7 @@ public class ItemEditFragment extends DialogFragment {
             }
         });
     }
-
+/*
     private String getDateString(){
         int   day  = mDatePicker.getDayOfMonth();
         int   month= mDatePicker.getMonth();
@@ -222,7 +218,7 @@ public class ItemEditFragment extends DialogFragment {
         mDatePicker.updateDate( year, month, day);
 
     }
-
+*/
     public interface Communication {
         void updateItemList (List<TaskItem> items);
     }

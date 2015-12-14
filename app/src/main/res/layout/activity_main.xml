@@ -2,27 +2,28 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    >
+    android:background="@drawable/background_color"
+    tools:context=".MainActivity">
 
     <com.baoyz.swipemenulistview.SwipeMenuListView
         android:id="@+id/listView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/button_add"/>
+        android:layout_height="match_parent"/>
 
-    <ImageButton
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="@dimen/round_button_diameter"
+        android:layout_height="@dimen/round_button_diameter"
         android:id="@+id/button_add"
         android:src="@drawable/ic_add_white_48dp"
-        android:background="@drawable/button_shape"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:padding="5dp"
-        android:layout_marginBottom="5dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginLeft="20dp"/>
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="30dp"
+        android:layout_marginBottom="60dp" />
+
+     <!--   fab:fab_colorRipple="@drawable/button_shape_ripple"-->
+    <!--    android:background="@drawable/button_shape_ripple"
+        android:elevation="@dimen/elevation_low"
+        android:stateListAnimator="@anim/button_elevation" -->
 
     <!-- for debug use
         <TextView
