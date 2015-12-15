@@ -2,7 +2,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/background_color_edit">
+                android:background="@drawable/background_color_edit"
+                android:gravity="bottom"
+                android:paddingTop="90dp">
 
     <TextView
         android:layout_width="wrap_content"
@@ -10,17 +12,16 @@
         android:id="@+id/label_title"
         android:textSize="25sp"
         android:text="Title:"
-        android:layout_margin="10dp"/>
+        android:layout_margin="20dp"/>
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/edit_title"
-        android:textSize="35sp"
+        android:textSize="30sp"
         android:hint="@string/title_edit_hint"
         android:singleLine="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/label_title"/>
+        android:layout_toRightOf="@+id/label_title"
+        android:layout_margin="10dp"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -29,8 +30,7 @@
         android:id="@+id/label_priority"
         android:textSize="25dp"
         android:layout_below="@+id/edit_title"
-        android:layout_toRightOf="@+id/button_date"
-        android:layout_margin="10dp"/>
+        android:layout_margin="20dp"/>
 
     <Spinner
         android:layout_width="wrap_content"
@@ -38,23 +38,39 @@
         android:id="@+id/priority_spinner"
         android:layout_toRightOf="@+id/label_priority"
         android:layout_below="@+id/edit_title"
-        android:layout_marginTop="10dp"/>
-    <Button
+        android:layout_margin="20dp"/>
+
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:id="@+id/label_date"
+        android:textSize="25sp"
+        android:layout_below="@+id/label_priority"
+        android:layout_margin="20dp"
+        android:text="Due:"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
         android:id="@+id/button_date"
-        android:layout_below="@+id/edit_title"
-        android:text="Set Date "
-        android:textSize="25dp"
+        android:textSize="20sp"
+        android:background="@drawable/button_color_transparent"
+        android:elevation="1dp"
+        android:layout_below="@+id/label_priority"
+        android:layout_toRightOf="@+id/label_date"
         android:layout_margin="10dp"
-        />
+        android:text="MM/DD/YYYY"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"/>
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/scrollView"
         android:layout_below="@+id/button_date"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true">
+        android:layout_alignParentStart="true"
+        android:layout_margin="20dp">
 
         <EditText
             android:layout_width="match_parent"
@@ -64,7 +80,7 @@
             android:layout_alignParentStart="true"
             android:layout_marginTop="5dp"
             android:textSize="20sp"
-            android:hint="Enter note here\n\n"/>
+            android:hint="note\n"/>
 
             <!--
             <DatePicker
