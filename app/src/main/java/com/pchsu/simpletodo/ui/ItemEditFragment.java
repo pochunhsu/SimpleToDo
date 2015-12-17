@@ -7,34 +7,44 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.activeandroid.query.Select;
+import com.codetroopers.betterpickers.calendardatepicker.CalendarDatePickerDialogFragment;
 import com.pchsu.simpletodo.R;
 import com.pchsu.simpletodo.data.TaskItem;
 
+import org.joda.time.DateTime;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class ItemEditFragment extends DialogFragment {
+public class ItemEditFragment extends DialogFragment implements CalendarDatePickerDialogFragment.OnDateSetListener{
 
     public static final String TAG_TITLE  = "TITLE";
+    public static final String TAG_DATE_PICKER  = "DATE_PICKER";
+    public static final String DEFAULT_DATE_FORMAT  = "MM/DD/YYYY";
 
     @Bind(R.id.edit_title) EditText mEditTitle;
     @Bind(R.id.priority_spinner) Spinner mSpinnerPriority;
     @Bind(R.id.edit_note) EditText mEditNote;
-  //  @Bind(R.id.datePicker) DatePicker mDatePicker;
+    @Bind(R.id.button_date) Button mButtonDate;
     @Bind(R.id.button_save) FloatingActionButton mButtonSave;
 
     TaskItem mItem;
@@ -81,27 +91,6 @@ public class ItemEditFragment extends DialogFragment {
         View v = inflater.inflate(R.layout.item_editor, container, false);
         ButterKnife.bind(this, v);
 
-        return v;
-    }
-
-    // make the dialog full screen
-    @Override
-    public void onStart()
-    {
-        super.onStart();
-
-        Dialog dialog = getDialog();
-        if (dialog != null)
-        {
-            int width = ViewGroup.LayoutParams.MATCH_PARENT;
-            int height = ViewGroup.LayoutParams.MATCH_PARENT;
-            dialog.getWindow().setLayout(width, height);
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
         // set up the spinner for priority selection
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(),
                 R.array.priority_choices, R.layout.spinner_item);
@@ -120,9 +109,10 @@ public class ItemEditFragment extends DialogFragment {
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
-        }) ;
+        });
 
         // read parameter and look up item instance in db
+        // and then populate the UI display accordingly
         String title = getArguments().getString(TAG_TITLE);
         if (title == null){  // (1) adding new Item case
             mItem = new TaskItem();
@@ -136,16 +126,31 @@ public class ItemEditFragment extends DialogFragment {
             if (mItem == null) {
                 Toast.makeText(getActivity(), "Error: cannot find \"" + title + "\" in db", Toast.LENGTH_LONG).show();
                 mItem = new TaskItem();
+                mButtonDate.setText(DEFAULT_DATE_FORMAT);
             }else{ // initialize the fields in the fragment
                 mEditTitle.setText(mItem.getTitle());
                 mSpinnerPriority.setSelection(mItem.getPriority());
                 mEditNote.setText(mItem.getNote());
-                //setDatePicker(mItem.getDate());
+                mButtonDate.setText(mItem.getDate());
                 mIsNew = false;
             }
         }
 
-        // set up SAVE actions
+        // set up date-picker button action
+        mButtonDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FragmentManager fm = getActivity().getSupportFragmentManager();
+                DateTime now = DateTime.now();
+                CalendarDatePickerDialogFragment calendarDatePickerDialogFragment = CalendarDatePickerDialogFragment
+                        .newInstance(ItemEditFragment.this, now.getYear(), now.getMonthOfYear() - 1,
+                                now.getDayOfMonth());
+                calendarDatePickerDialogFragment.setThemeDark(true);
+                calendarDatePickerDialogFragment.show(fm, TAG_DATE_PICKER);
+            }
+        });
+
+        // set up floating action button action (SAVE)
         mButtonSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -171,12 +176,15 @@ public class ItemEditFragment extends DialogFragment {
                     return;
                 }
 
-                // insertion happens here
+                // db item insertion happens here
                 mItem.setTitle(mEditTitle.getText().toString());
                 mItem.setNote(mEditNote.getText().toString());
                 int priority = TaskItem.priority_string_to_index(mSpinnerPriority.getSelectedItem().toString());
                 mItem.setPriority(priority);
-                //mItem.setDate(getDateString());
+                String date_str = mButtonDate.getText().toString();
+                if ( ! date_str.equals(DEFAULT_DATE_FORMAT)){
+                    mItem.setDate(date_str);
+                }
                 mItem.save();
 
                 List<TaskItem> items = new Select()
@@ -188,37 +196,77 @@ public class ItemEditFragment extends DialogFragment {
                 dismiss();
             }
         });
-    }
-/*
-    private String getDateString(){
-        int   day  = mDatePicker.getDayOfMonth();
-        int   month= mDatePicker.getMonth();
-        int   year = mDatePicker.getYear();
 
+        return v;
+    }
+
+    // make the dialog full screen
+    @Override
+    public void onStart()
+    {
+        super.onStart();
+
+        Dialog dialog = getDialog();
+        if (dialog != null)
+        {
+            int width = ViewGroup.LayoutParams.MATCH_PARENT;
+            int height = ViewGroup.LayoutParams.MATCH_PARENT;
+            dialog.getWindow().setLayout(width, height);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // reattaching to the fragment
+        CalendarDatePickerDialogFragment calendarDatePickerDialogFragment
+                = (CalendarDatePickerDialogFragment) getActivity().getSupportFragmentManager()
+                .findFragmentByTag(TAG_DATE_PICKER);
+        if (calendarDatePickerDialogFragment != null) {
+            calendarDatePickerDialogFragment.setOnDateSetListener(this);
+        }
+    }
+
+    @Override
+    public void onDateSet(CalendarDatePickerDialogFragment dialog, int year, int month, int day) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(year, month, day);
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy", Locale.US);
         dateFormat.setTimeZone(calendar.getTimeZone());
-        return dateFormat.format(calendar.getTime());
+        mButtonDate.setText(dateFormat.format(calendar.getTime()));
     }
 
-    private void setDatePicker(String str){
+    /*
+        private String getDateString(){
+            int   day  = mDatePicker.getDayOfMonth();
+            int   month= mDatePicker.getMonth();
+            int   year = mDatePicker.getYear();
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy");
-        Calendar calendar = Calendar.getInstance();
-        try {
-            calendar.setTime(dateFormat.parse(str));
-        } catch (ParseException e) {
-            e.printStackTrace();
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(year, month, day);
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy");
+            dateFormat.setTimeZone(calendar.getTimeZone());
+            return dateFormat.format(calendar.getTime());
         }
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
-        mDatePicker.updateDate( year, month, day);
 
-    }
-*/
+        private void setDatePicker(String str){
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy");
+            Calendar calendar = Calendar.getInstance();
+            try {
+                calendar.setTime(dateFormat.parse(str));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+            mDatePicker.updateDate( year, month, day);
+
+        }
+    */
     public interface Communication {
         void updateItemList (List<TaskItem> items);
     }
