@@ -8,6 +8,8 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.NotificationCompat;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,11 +24,13 @@ import android.widget.Toast;
 
 import com.activeandroid.query.Select;
 import com.codetroopers.betterpickers.calendardatepicker.CalendarDatePickerDialogFragment;
+import com.codetroopers.betterpickers.radialtimepicker.RadialTimePickerDialogFragment;
 import com.pchsu.simpletodo.R;
 import com.pchsu.simpletodo.data.TaskItem;
 
 import org.joda.time.DateTime;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
@@ -35,16 +39,19 @@ import java.util.Locale;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class ItemEditFragment extends DialogFragment implements CalendarDatePickerDialogFragment.OnDateSetListener{
+public class ItemEditFragment extends DialogFragment
+        implements CalendarDatePickerDialogFragment.OnDateSetListener, RadialTimePickerDialogFragment.OnTimeSetListener{
 
     public static final String TAG_TITLE  = "TITLE";
     public static final String TAG_DATE_PICKER  = "DATE_PICKER";
-    public static final String DEFAULT_DATE_FORMAT  = "MM/DD/YYYY";
+    public static final String TAG_TIME_PICKER  = "TIME_PICKER";
 
     @Bind(R.id.edit_title) EditText mEditTitle;
     @Bind(R.id.priority_spinner) Spinner mSpinnerPriority;
+    @Bind(R.id.alarm_spinner) Spinner mSpinnerAlarm;
     @Bind(R.id.edit_note) EditText mEditNote;
     @Bind(R.id.button_date) Button mButtonDate;
+    @Bind(R.id.button_time) Button mButtonTime;
     @Bind(R.id.button_save) FloatingActionButton mButtonSave;
 
     TaskItem mItem;
@@ -92,11 +99,31 @@ public class ItemEditFragment extends DialogFragment implements CalendarDatePick
         ButterKnife.bind(this, v);
 
         // set up the spinner for priority selection
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(),
+        ArrayAdapter<CharSequence> adapter_priority = ArrayAdapter.createFromResource(getActivity(),
                 R.array.priority_choices, R.layout.spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mSpinnerPriority.setAdapter(adapter);
+        adapter_priority.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSpinnerPriority.setAdapter(adapter_priority);
         mSpinnerPriority.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                TextView selectedText = (TextView) parent.getChildAt(0);
+                if (selectedText != null) {
+                    selectedText.setTextColor(Color.WHITE);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        // set up the spinner for alarm time selection
+        ArrayAdapter<CharSequence> adapter_alarm = ArrayAdapter.createFromResource(getActivity(),
+                R.array.alarm_choices, R.layout.spinner_item);
+        adapter_alarm.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSpinnerAlarm.setAdapter(adapter_alarm);
+        mSpinnerAlarm.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 TextView selectedText = (TextView) parent.getChildAt(0);
@@ -126,12 +153,15 @@ public class ItemEditFragment extends DialogFragment implements CalendarDatePick
             if (mItem == null) {
                 Toast.makeText(getActivity(), "Error: cannot find \"" + title + "\" in db", Toast.LENGTH_LONG).show();
                 mItem = new TaskItem();
-                mButtonDate.setText(DEFAULT_DATE_FORMAT);
+                mButtonDate.setText(R.string.label_set_date);
+                mButtonDate.setText(R.string.label_set_time);
             }else{ // initialize the fields in the fragment
                 mEditTitle.setText(mItem.getTitle());
                 mSpinnerPriority.setSelection(mItem.getPriority());
+                mSpinnerAlarm.setSelection((mItem.getAlarmTime().getValue()));
                 mEditNote.setText(mItem.getNote());
                 mButtonDate.setText(mItem.getDate());
+                mButtonTime.setText(mItem.getTime());
                 mIsNew = false;
             }
         }
@@ -142,11 +172,64 @@ public class ItemEditFragment extends DialogFragment implements CalendarDatePick
             public void onClick(View view) {
                 FragmentManager fm = getActivity().getSupportFragmentManager();
                 DateTime now = DateTime.now();
-                CalendarDatePickerDialogFragment calendarDatePickerDialogFragment = CalendarDatePickerDialogFragment
-                        .newInstance(ItemEditFragment.this, now.getYear(), now.getMonthOfYear() - 1,
-                                now.getDayOfMonth());
+                final String date_str = mButtonDate.getText().toString();
+                final String str_set_date =  getResources().getText(R.string.label_set_date).toString();
+                CalendarDatePickerDialogFragment calendarDatePickerDialogFragment;
+                // For 1st time setting date-piker, use the current date as default
+                if (date_str.equalsIgnoreCase(str_set_date)) {
+                    calendarDatePickerDialogFragment = CalendarDatePickerDialogFragment
+                            .newInstance(ItemEditFragment.this, now.getYear(), now.getMonthOfYear() - 1,
+                                    now.getDayOfMonth());
+                // For modifying setting in date-piker, use the set date as default
+                }else{
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy", Locale.US);
+                    Calendar calendar = Calendar.getInstance();
+                    try {
+                        calendar.setTime(dateFormat.parse(date_str));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    int year = calendar.get(Calendar.YEAR);
+                    int month = calendar.get(Calendar.MONTH);
+                    int day = calendar.get(Calendar.DAY_OF_MONTH);
+                    calendarDatePickerDialogFragment = CalendarDatePickerDialogFragment
+                            .newInstance(ItemEditFragment.this, year, month, day);
+                }
                 calendarDatePickerDialogFragment.setThemeDark(true);
                 calendarDatePickerDialogFragment.show(fm, TAG_DATE_PICKER);
+            }
+        });
+        // set up dial-time-picker button action
+        mButtonTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FragmentManager fm = getActivity().getSupportFragmentManager();
+                DateTime now = DateTime.now();
+                final String time_str = mButtonTime.getText().toString();
+                final String str_set_time =  getResources().getText(R.string.label_set_time).toString();
+                RadialTimePickerDialogFragment timePickerDialog;
+                // For 1st time setting time-piker, use the current time as default
+                if (time_str.equalsIgnoreCase(str_set_time)){
+                    timePickerDialog = RadialTimePickerDialogFragment
+                            .newInstance(ItemEditFragment.this, now.getHourOfDay(), now.getMinuteOfHour(),
+                                    DateFormat.is24HourFormat(getActivity()));
+                // For modifying setting in time-piker, use the set time as default
+                }else{
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.US);
+                    Calendar calendar = Calendar.getInstance();
+                    try {
+                        calendar.setTime(dateFormat.parse(time_str));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    int hour = calendar.get(Calendar.HOUR_OF_DAY);
+                    int minute = calendar.get(Calendar.MINUTE);
+                    timePickerDialog = RadialTimePickerDialogFragment
+                            .newInstance(ItemEditFragment.this, hour, minute,
+                                    DateFormat.is24HourFormat(getActivity()));
+                }
+                timePickerDialog.setThemeDark(true);
+                timePickerDialog.show(fm, TAG_TIME_PICKER);
             }
         });
 
@@ -169,21 +252,35 @@ public class ItemEditFragment extends DialogFragment implements CalendarDatePick
                         return;
                     }
                 }
-
+                // check if the title is empty
                 if(title.equals("")){
                     Toast.makeText(getActivity(), "Warning: please specify title!\nInsertion skipped.", Toast.LENGTH_SHORT).show();
                     dismiss();
                     return;
                 }
+                // check if alarm is set and date/time not set, abort the save and warn the user
+                if (!alarmSettingOK()){ return;}
 
+                // all the checks pass ; now the data is valid and ready to be inserted into db
                 // db item insertion happens here
                 mItem.setTitle(mEditTitle.getText().toString());
                 mItem.setNote(mEditNote.getText().toString());
+
                 int priority = TaskItem.priority_string_to_index(mSpinnerPriority.getSelectedItem().toString());
                 mItem.setPriority(priority);
-                String date_str = mButtonDate.getText().toString();
-                if ( ! date_str.equals(DEFAULT_DATE_FORMAT)){
+
+                TaskItem.AlarmTime alarmTime = TaskItem.alarm_string_to_index(mSpinnerAlarm.getSelectedItem().toString());
+                mItem.setAlarmTime(alarmTime);
+
+                final String date_str = mButtonDate.getText().toString();
+                final String str_set_date =  getResources().getText(R.string.label_set_date).toString();
+                if ( ! date_str.equalsIgnoreCase(str_set_date)){
                     mItem.setDate(date_str);
+                }
+                final String time_str = mButtonTime.getText().toString();
+                final String str_set_time =  getResources().getText(R.string.label_set_time).toString();
+                if ( ! time_str.equalsIgnoreCase(str_set_time)){
+                    mItem.setTime(time_str);
                 }
                 mItem.save();
 
@@ -226,6 +323,12 @@ public class ItemEditFragment extends DialogFragment implements CalendarDatePick
         if (calendarDatePickerDialogFragment != null) {
             calendarDatePickerDialogFragment.setOnDateSetListener(this);
         }
+        RadialTimePickerDialogFragment rtpd
+                = (RadialTimePickerDialogFragment) getActivity().getSupportFragmentManager()
+                .findFragmentByTag(TAG_TIME_PICKER);
+        if (rtpd != null) {
+            rtpd.setOnTimeSetListener(this);
+        }
     }
 
     @Override
@@ -235,6 +338,45 @@ public class ItemEditFragment extends DialogFragment implements CalendarDatePick
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy", Locale.US);
         dateFormat.setTimeZone(calendar.getTimeZone());
         mButtonDate.setText(dateFormat.format(calendar.getTime()));
+    }
+
+    @Override
+    public void onTimeSet(RadialTimePickerDialogFragment dialog, int hourOfDay, int minute) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        calendar.set(Calendar.MINUTE, minute);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.US);
+        dateFormat.setTimeZone(calendar.getTimeZone());
+        mButtonTime.setText(dateFormat.format(calendar.getTime()));
+    }
+
+    // if alarm is set and date/time is not set, warn the user
+    private boolean alarmSettingOK(){
+        final String date_str = mButtonDate.getText().toString();
+        final String time_str = mButtonTime.getText().toString();
+        final String str_set_date =  getResources().getText(R.string.label_set_date).toString();
+        final String str_set_time =  getResources().getText(R.string.label_set_time).toString();
+        TaskItem.AlarmTime alarmTime = TaskItem.alarm_string_to_index(mSpinnerAlarm.getSelectedItem().toString());
+        if( alarmTime != TaskItem.AlarmTime.NO_SETTING){
+            if (date_str.equalsIgnoreCase(str_set_date) || time_str.equalsIgnoreCase(str_set_time)){
+                Toast.makeText(getActivity(), "Warning: to use alarm. Please set date/time!", Toast.LENGTH_LONG).show();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void setAlarm(){
+     //   Long
+
+    }
+
+    private void setupNotification(){
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(getActivity())
+                        .setSmallIcon(R.drawable.ic_assignment_white_48dp)
+                        .setContentTitle("My notification")
+                        .setContentText("Hello World!");
     }
 
     /*

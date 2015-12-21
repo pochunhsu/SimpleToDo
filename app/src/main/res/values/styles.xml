@@ -15,4 +15,5 @@
         <item name="android:background">@drawable/spinner_item_style</item>
         <item name="android:checkMark">@null</item>
     </style>
+
 </resources>

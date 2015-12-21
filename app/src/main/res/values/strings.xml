@@ -6,9 +6,21 @@
     <string name="Label_Add">Add</string>
     <string name="Label_hint">Enter a new task</string>
     <string name="title_edit_hint">Enter title here ...</string>
+    <string name="label_set_date">Set Date</string>
+    <string name="label_set_time">Set Time</string>
     <string-array name = "priority_choices" >
         <item>Low</item>
         <item>Medium</item>
         <item>High</item>
     </string-array>
+    <string-array name = "alarm_choices" >
+        <item> ---- </item>
+        <item>30 min</item>
+        <item>1 hr</item>
+        <item>2 hr</item>
+        <item>6 hr</item>
+        <item>12 hr</item>
+        <item>1 day</item>
+    </string-array>
+
 </resources>
