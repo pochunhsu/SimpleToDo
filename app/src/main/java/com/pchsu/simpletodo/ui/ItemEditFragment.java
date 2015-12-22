@@ -1,14 +1,17 @@
 package com.pchsu.simpletodo.ui;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Dialog;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.NotificationCompat;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,12 +30,14 @@ import com.codetroopers.betterpickers.calendardatepicker.CalendarDatePickerDialo
 import com.codetroopers.betterpickers.radialtimepicker.RadialTimePickerDialogFragment;
 import com.pchsu.simpletodo.R;
 import com.pchsu.simpletodo.data.TaskItem;
+import com.pchsu.simpletodo.service.AlarmReceiver;
 
 import org.joda.time.DateTime;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -271,6 +276,9 @@ public class ItemEditFragment extends DialogFragment
 
                 TaskItem.AlarmTime alarmTime = TaskItem.alarm_string_to_index(mSpinnerAlarm.getSelectedItem().toString());
                 mItem.setAlarmTime(alarmTime);
+                if(alarmTime != TaskItem.AlarmTime.NO_SETTING){
+                    setAlarm();
+                }
 
                 final String date_str = mButtonDate.getText().toString();
                 final String str_set_date =  getResources().getText(R.string.label_set_date).toString();
@@ -290,6 +298,7 @@ public class ItemEditFragment extends DialogFragment
                         .execute();
                 //Toast.makeText(getActivity(), items.size() +"" , Toast.LENGTH_SHORT).show();
                 mCallback.updateItemList(items);
+
                 dismiss();
             }
         });
@@ -367,16 +376,12 @@ public class ItemEditFragment extends DialogFragment
     }
 
     private void setAlarm(){
-     //   Long
+        Long alertTime = new GregorianCalendar().getTimeInMillis()+5*1000;
+        Intent alertIntent = new Intent(getActivity(), AlarmReceiver.class);
 
-    }
-
-    private void setupNotification(){
-        NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(getActivity())
-                        .setSmallIcon(R.drawable.ic_assignment_white_48dp)
-                        .setContentTitle("My notification")
-                        .setContentText("Hello World!");
+        AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, alertTime,
+                PendingIntent.getBroadcast(getActivity(),1, alertIntent,PendingIntent.FLAG_UPDATE_CURRENT));
     }
 
     /*
