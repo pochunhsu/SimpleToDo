@@ -32,20 +32,20 @@ import com.pchsu.simpletodo.R;
 import com.pchsu.simpletodo.data.TaskItem;
 import com.pchsu.simpletodo.service.AlarmReceiver;
 
-import org.joda.time.DateTime;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class ItemEditFragment extends DialogFragment
-        implements CalendarDatePickerDialogFragment.OnDateSetListener, RadialTimePickerDialogFragment.OnTimeSetListener{
+        implements CalendarDatePickerDialogFragment.OnDateSetListener,
+                    RadialTimePickerDialogFragment.OnTimeSetListener{
 
     public static final String TAG_TITLE  = "TITLE";
     public static final String TAG_DATE_PICKER  = "DATE_PICKER";
@@ -176,19 +176,21 @@ public class ItemEditFragment extends DialogFragment
             @Override
             public void onClick(View view) {
                 FragmentManager fm = getActivity().getSupportFragmentManager();
-                DateTime now = DateTime.now();
+                Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
                 final String date_str = mButtonDate.getText().toString();
                 final String str_set_date =  getResources().getText(R.string.label_set_date).toString();
                 CalendarDatePickerDialogFragment calendarDatePickerDialogFragment;
+
                 // For 1st time setting date-piker, use the current date as default
                 if (date_str.equalsIgnoreCase(str_set_date)) {
                     calendarDatePickerDialogFragment = CalendarDatePickerDialogFragment
-                            .newInstance(ItemEditFragment.this, now.getYear(), now.getMonthOfYear() - 1,
-                                    now.getDayOfMonth());
+                            .newInstance(ItemEditFragment.this, calendar.get(Calendar.YEAR),
+                                    calendar.get(Calendar.MONTH),
+                                    calendar.get(Calendar.DAY_OF_MONTH));
+
                 // For modifying setting in date-piker, use the set date as default
                 }else{
                     SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy", Locale.US);
-                    Calendar calendar = Calendar.getInstance();
                     try {
                         calendar.setTime(dateFormat.parse(date_str));
                     } catch (ParseException e) {
@@ -204,24 +206,29 @@ public class ItemEditFragment extends DialogFragment
                 calendarDatePickerDialogFragment.show(fm, TAG_DATE_PICKER);
             }
         });
+
         // set up dial-time-picker button action
         mButtonTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FragmentManager fm = getActivity().getSupportFragmentManager();
-                DateTime now = DateTime.now();
+                Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+                //DateTime now = DateTime.now();
                 final String time_str = mButtonTime.getText().toString();
                 final String str_set_time =  getResources().getText(R.string.label_set_time).toString();
                 RadialTimePickerDialogFragment timePickerDialog;
+
                 // For 1st time setting time-piker, use the current time as default
                 if (time_str.equalsIgnoreCase(str_set_time)){
                     timePickerDialog = RadialTimePickerDialogFragment
-                            .newInstance(ItemEditFragment.this, now.getHourOfDay(), now.getMinuteOfHour(),
-                                    DateFormat.is24HourFormat(getActivity()));
+                            .newInstance(ItemEditFragment.this,
+                                            calendar.get(Calendar.HOUR_OF_DAY),
+                                            calendar.get(Calendar.MINUTE),
+                                            DateFormat.is24HourFormat(getActivity()));
+
                 // For modifying setting in time-piker, use the set time as default
                 }else{
                     SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.US);
-                    Calendar calendar = Calendar.getInstance();
                     try {
                         calendar.setTime(dateFormat.parse(time_str));
                     } catch (ParseException e) {

@@ -4,7 +4,7 @@
     <style name="AppTheme" parent="Theme.AppCompat">
         <!--<item name="android:dropDownListViewStyle">@style/MyDropDownListView</item>>-->
         <item name="android:spinnerDropDownItemStyle">@style/MySpinnerDropDownItem</item>
-        <item name="colorAccent">#64DD17</item>
+        <item name="colorAccent">#0091EA</item> <!-- this is for the Floating Action button color -->
     </style>
 <!--
     <style name="MyDropDownListView" parent="android:style/Widget.Holo.ListView.DropDown">
