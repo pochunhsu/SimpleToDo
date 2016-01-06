@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="title_height_weight">30</integer>
+    <integer name="item_height_weight">10</integer>
+    <integer name="note_height_weight">30</integer>
+</resources>

@@ -6,8 +6,8 @@
     <string name="Label_Add">Add</string>
     <string name="Label_hint">Enter a new task</string>
     <string name="title_edit_hint">Enter title here ...</string>
-    <string name="label_set_date">Set Date</string>
-    <string name="label_set_time">Set Time</string>
+    <string name="label_set_date">--/--/----</string>
+    <string name="label_set_time">--:--</string>
     <string-array name = "priority_choices" >
         <item>Low</item>
         <item>Medium</item>

@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 
+import com.pchsu.simpletodo.Constant;
 import com.pchsu.simpletodo.R;
 import com.pchsu.simpletodo.ui.MainActivity;
 
@@ -15,17 +16,19 @@ public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        createNotification(context, "Task Due", "123", "456");
+        final String title = intent.getStringExtra(Constant.TAG_TITLE);
+        final String note = intent.getStringExtra(Constant.TAG_NOTE);
+
+        createNotification(context, title, note);
     }
 
-    public void createNotification(Context context, String msgTitle, String msgText,String msgAlert ){
+    public void createNotification(Context context, String msgTitle, String msgText){
         PendingIntent intent = PendingIntent.getActivity(context, 0,
                 new Intent(context, MainActivity.class), 0);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.ic_assignment_white_48dp)
                 .setContentTitle(msgTitle)
-                .setTicker(msgAlert)
                 .setContentText(msgText);
 
         builder.setContentIntent(intent);

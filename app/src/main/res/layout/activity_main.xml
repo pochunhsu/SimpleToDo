@@ -20,11 +20,6 @@
         android:layout_marginRight="30dp"
         android:layout_marginBottom="60dp" />
 
-     <!--   fab:fab_colorRipple="@drawable/button_shape_ripple"-->
-    <!--    android:background="@drawable/button_shape_ripple"
-        android:elevation="@dimen/elevation_low"
-        android:stateListAnimator="@anim/button_elevation" -->
-
     <!-- for debug use
         <TextView
         android:layout_width="wrap_content"

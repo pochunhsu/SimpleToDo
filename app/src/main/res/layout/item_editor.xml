@@ -2,51 +2,161 @@
 <android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:background="@drawable/background_edit">
-
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:id="@+id/frame"
+        android:background="@drawable/background_edit_title_priority_high" >
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="40"
-            android:id="@+id/area_title"
-            android:background="@drawable/background_edit_title"
-            android:padding="20dp">
+            android:layout_weight="@integer/title_height_weight"
+            android:id="@+id/area_title">
             <EditText
                 android:id="@+id/edit_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="40dp"
                 android:layout_centerInParent="true"
                 android:hint="@string/title_edit_hint"
                 android:singleLine="true"
-                android:textSize="32sp"/>
-
-            <TextView
-                android:id="@+id/text_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-            />
+                android:imeOptions="actionDone"
+                android:textSize="30sp"/>
         </RelativeLayout>
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="25"
+            android:layout_weight="@integer/item_height_weight"
+            android:id="@+id/area_date"
+            android:background="@drawable/background_edit"
+            android:padding="10dp">
+            <ImageView
+                android:id="@+id/image_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:src="@drawable/ic_event_white_36dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="40dp"
+                android:layout_centerVertical="true"/>
+            <Button
+                android:id="@+id/button_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:background="@drawable/button_color_transparent"
+                android:layout_toRightOf="@+id/image_date"
+                android:textSize="24sp"
+                tools:text="--/--/----"/>
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="@integer/item_height_weight"
+            android:id="@+id/area_clock"
+            android:background="@drawable/background_edit"
+            android:padding="10dp">
+            <ImageView
+                android:id="@+id/image_clock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:src="@drawable/ic_access_time_white_36dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="40dp"
+                android:layout_centerVertical="true"/>
+            <Button
+                android:id="@+id/button_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:background="@drawable/button_color_transparent"
+                android:layout_toRightOf="@+id/image_clock"
+                android:textSize="24sp"
+                tools:text="--:--"/>
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="@integer/item_height_weight"
+            android:id="@+id/area_alarm"
+            android:background="@drawable/background_edit"
+            android:padding="10dp">
+            <ImageView
+                android:id="@+id/image_alarm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:src="@drawable/ic_add_alert_white_36dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="40dp"
+                android:layout_centerVertical="true"/>
+            <Spinner
+                android:id="@+id/alarm_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_centerVertical="true"
+                android:background="@drawable/button_color_transparent"
+                android:layout_toRightOf="@id/image_alarm"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:layout_marginRight="5dp"/>
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="@integer/item_height_weight"
+            android:id="@+id/area_flag"
+            android:background="@drawable/background_edit"
+            android:padding="10dp">
+            <ImageView
+                android:id="@+id/image_flag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:src="@drawable/ic_flag_white_36dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="40dp"
+                android:layout_centerVertical="true"/>
+
+            <Spinner
+                android:id="@+id/priority_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_centerVertical="true"
+                android:background="@drawable/button_color_transparent"
+                android:layout_toRightOf="@id/image_flag"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:layout_marginRight="5dp"/>
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="@integer/note_height_weight"
             android:id="@+id/area_note"
-            android:background="@drawable/background_edit_note"
+            android:background="@drawable/background_edit"
             android:padding="20dp">
+            <ImageView
+                android:id="@+id/image_note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:src="@drawable/ic_note_white_36dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="40dp"/>
             <ScrollView
                 android:id="@+id/scrollView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <EditText
+                android:layout_height="match_parent"
+                android:layout_toRightOf="@id/image_note">
+                 <EditText
                     android:id="@+id/edit_note"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -54,89 +164,19 @@
                     android:layout_marginTop="5dp"
                     android:hint="note\n"
                     android:inputType="textMultiLine"
+                    android:imeOptions="actionDone"
                     android:textSize="20sp"/>
             </ScrollView>
         </RelativeLayout>
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="35"
-            android:padding="20dp"
-            android:background="@drawable/background_edit">
-
-            <Spinner
-                android:id="@+id/priority_spinner"
-                android:layout_width="120dp"
-                android:layout_height="50dp"
-                android:layout_marginTop="100dp"
-                android:layout_marginRight="10dp"
-                android:layout_below="@+id/label_date"
-                android:layout_toLeftOf="@+id/label_date"
-                android:background="@drawable/button_color_transparent"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:layout_centerHorizontal="true"/>
-
-            <TextView
-                android:id="@+id/label_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"/>
-                android:layout_marginTop="10dp"
-                android:text="Due:"
-                android:textSize="22sp"/>
-
-            <Button
-                android:id="@+id/button_date"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginRight="10dp"
-                android:layout_toLeftOf="@+id/label_date"
-                android:background="@drawable/button_color_transparent"
-                android:elevation="1dp"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:text="@string/label_set_date"
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/button_time"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginLeft="10dp"
-                android:layout_toRightOf="@+id/label_date"
-                android:background="@drawable/button_color_transparent"
-                android:elevation="1dp"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:text="@string/label_set_time"
-                android:textSize="20sp"/>
-
-            <Spinner
-                android:id="@+id/alarm_spinner"
-                android:layout_width="100dp"
-                android:layout_height="50dp"
-                android:layout_marginTop="100dp"
-                android:layout_marginLeft="10dp"
-                android:layout_below="@+id/label_date"
-                android:layout_toRightOf="@+id/label_date"
-                android:background="@drawable/button_color_transparent"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"/>
-
-        </RelativeLayout>
-
     </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/button_save"
         android:layout_width="@dimen/round_button_diameter"
         android:layout_height="@dimen/round_button_diameter"
-        app:layout_anchor="@id/area_note"
+        app:layout_anchor="@id/area_title"
         app:layout_anchorGravity="bottom|right|end"
-        android:layout_margin="30dp"
+        android:layout_margin="15dp"
         android:src="@drawable/ic_save_white_48dp"/>
 
 </android.support.design.widget.CoordinatorLayout>

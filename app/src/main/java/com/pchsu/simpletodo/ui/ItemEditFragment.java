@@ -21,6 +21,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +29,7 @@ import android.widget.Toast;
 import com.activeandroid.query.Select;
 import com.codetroopers.betterpickers.calendardatepicker.CalendarDatePickerDialogFragment;
 import com.codetroopers.betterpickers.radialtimepicker.RadialTimePickerDialogFragment;
+import com.pchsu.simpletodo.Constant;
 import com.pchsu.simpletodo.R;
 import com.pchsu.simpletodo.data.TaskItem;
 import com.pchsu.simpletodo.service.AlarmReceiver;
@@ -47,7 +49,6 @@ public class ItemEditFragment extends DialogFragment
         implements CalendarDatePickerDialogFragment.OnDateSetListener,
                     RadialTimePickerDialogFragment.OnTimeSetListener{
 
-    public static final String TAG_TITLE  = "TITLE";
     public static final String TAG_DATE_PICKER  = "DATE_PICKER";
     public static final String TAG_TIME_PICKER  = "TIME_PICKER";
 
@@ -58,6 +59,7 @@ public class ItemEditFragment extends DialogFragment
     @Bind(R.id.button_date) Button mButtonDate;
     @Bind(R.id.button_time) Button mButtonTime;
     @Bind(R.id.button_save) FloatingActionButton mButtonSave;
+    @Bind(R.id.frame) LinearLayout mFrame;
 
     TaskItem mItem;
     Communication mCallback;
@@ -68,7 +70,7 @@ public class ItemEditFragment extends DialogFragment
 
         // set up the passing parameter
         Bundle args = new Bundle();
-        args.putString(TAG_TITLE, title);
+        args.putString(Constant.TAG_TITLE, title);
         f.setArguments(args);
 
         return f;
@@ -115,6 +117,17 @@ public class ItemEditFragment extends DialogFragment
                 if (selectedText != null) {
                     selectedText.setTextColor(Color.WHITE);
                 }
+                switch(position) {
+                    case TaskItem.PRIORITY_LOW:
+                        mFrame.setBackgroundResource(R.drawable.background_edit_title_priority_low);
+                        break;
+                    case TaskItem.PRIORITY_MED:
+                        mFrame.setBackgroundResource(R.drawable.background_edit_title_priority_med);
+                        break;
+                    case TaskItem.PRIORITY_HIGH:
+                        mFrame.setBackgroundResource(R.drawable.background_edit_title_priority_high);
+                        break;
+                }
             }
 
             @Override
@@ -145,10 +158,12 @@ public class ItemEditFragment extends DialogFragment
 
         // read parameter and look up item instance in db
         // and then populate the UI display accordingly
-        String title = getArguments().getString(TAG_TITLE);
+        String title = getArguments().getString(Constant.TAG_TITLE);
         if (title == null){  // (1) adding new Item case
             mItem = new TaskItem();
             mIsNew = true;
+            mButtonDate.setText(R.string.label_set_date);
+            mButtonTime.setText(R.string.label_set_time);
         }else{               // (2) modifying old item case
             mItem = new Select()
                     .from(TaskItem.class)
@@ -158,8 +173,6 @@ public class ItemEditFragment extends DialogFragment
             if (mItem == null) {
                 Toast.makeText(getActivity(), "Error: cannot find \"" + title + "\" in db", Toast.LENGTH_LONG).show();
                 mItem = new TaskItem();
-                mButtonDate.setText(R.string.label_set_date);
-                mButtonDate.setText(R.string.label_set_time);
             }else{ // initialize the fields in the fragment
                 mEditTitle.setText(mItem.getTitle());
                 mSpinnerPriority.setSelection(mItem.getPriority());
@@ -382,13 +395,29 @@ public class ItemEditFragment extends DialogFragment
         return true;
     }
 
-    private void setAlarm(){
-        Long alertTime = new GregorianCalendar().getTimeInMillis()+5*1000;
+    private void setAlarm() {
+        if (mItem == null) {
+            //TODO error msg
+            return;
+        } else if (mItem.getTitle() == null || mItem.getNote() == null) {
+            //TODO error msg
+            return;
+        }
+
+        final String title = mItem.getTitle();
+        final String note = mItem.getNote();
+        Long alertTime = new GregorianCalendar().getTimeInMillis()+3*1000;
         Intent alertIntent = new Intent(getActivity(), AlarmReceiver.class);
+        alertIntent.putExtra(Constant.TAG_TITLE,title);
+        alertIntent.putExtra(Constant.TAG_NOTE, note);
+        alertIntent.setAction(title);
 
         AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
         alarmManager.set(AlarmManager.RTC_WAKEUP, alertTime,
-                PendingIntent.getBroadcast(getActivity(),1, alertIntent,PendingIntent.FLAG_UPDATE_CURRENT));
+                PendingIntent.getBroadcast(getActivity(), 0, alertIntent, PendingIntent.FLAG_UPDATE_CURRENT));
+        alarmManager.set(AlarmManager.RTC_WAKEUP, alertTime+10000,
+                PendingIntent.getBroadcast(getActivity(),0 , alertIntent,PendingIntent.FLAG_UPDATE_CURRENT));
+
     }
 
     /*
