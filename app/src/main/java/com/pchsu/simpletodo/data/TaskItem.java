@@ -12,16 +12,13 @@ public class TaskItem extends Model{
     public final static int PRIORITY_MED = 1;
     public final static int PRIORITY_HIGH = 2;
 
-    public enum AlarmTime {
-        NO_SETTING(0), MIN_30(1), HR_1(2), HR_2(3), HR_6(4), HR_12(5), DAY_1(6);
-        private final int value;
-        AlarmTime(int value){
-            this.value = value;
-        }
-        public int getValue(){
-            return value;
-        }
-    }
+    public final static int NO_SETTING = 0;
+    public final static int MIN_30 = 1;
+    public final static int HR_1 = 2;
+    public final static int HR_2 = 3;
+    public final static int HR_6 = 4;
+    public final static int HR_12 = 5;
+    public final static int DAY_1 = 6;
 
     @Column(name = "Title", index = true, unique = true, onUniqueConflict = Column.ConflictAction.FAIL)
     String mTitle;
@@ -34,16 +31,20 @@ public class TaskItem extends Model{
     @Column(name = "Priority", index = true)
     int mPriority;
     @Column(name = "AlarmTime", index = true)
-    AlarmTime mAlarmTime;
+    int mAlarmIndex;
+    @Column(name = "AlarmMilis", index = true)
+    Long mAlarmMilis;
 
-    static public TaskItem newInstance(String title, String note, String date, String time, int priority, AlarmTime alarmTime){
+    static public TaskItem newInstance(String title, String note, String date, String time,
+                                       int priority, int alarmIndex, Long alarmMilis){
         TaskItem item = new TaskItem();
         item.mTitle = title;
         item.mNote = note;
         item.mDate = date;
         item.mTime = time;
         item.mPriority = priority;
-        item.mAlarmTime = alarmTime;
+        item.mAlarmIndex = alarmIndex;
+        item.mAlarmMilis = alarmMilis;
         return item;
     }
 
@@ -91,12 +92,20 @@ public class TaskItem extends Model{
         mTime = time;
     }
 
-    public AlarmTime getAlarmTime() {
-        return mAlarmTime;
+    public int getAlarmIndex() {
+        return mAlarmIndex;
     }
 
-    public void setAlarmTime(AlarmTime alarmTime) {
-        mAlarmTime = alarmTime;
+    public void setAlarmIndex(int alarmIndex) {
+        mAlarmIndex = alarmIndex;
+    }
+
+    public Long getAlarmMilis() {
+        return mAlarmMilis;
+    }
+
+    public void setAlarmMilis(Long alarmMilis) {
+        mAlarmMilis = alarmMilis;
     }
 
     public static int priority_string_to_index (String str){
@@ -117,33 +126,65 @@ public class TaskItem extends Model{
         return priority;
     }
 
-    public static AlarmTime alarm_string_to_index (String str){
-        AlarmTime alarmTime;
+    public static int alarm_string_to_index (String str){
+        int alarmIndex;
         switch(str){
             case "----":
-                alarmTime = AlarmTime.NO_SETTING;
+                alarmIndex = NO_SETTING;
                 break;
             case "30 min":
-                alarmTime = AlarmTime.MIN_30;
+                alarmIndex = MIN_30;
                 break;
             case "1 hr":
-                alarmTime = AlarmTime.HR_1;
+                alarmIndex = HR_1;
                 break;
             case "2 hr":
-                alarmTime = AlarmTime.HR_2;
+                alarmIndex = HR_2;
                 break;
             case "6 hr":
-                alarmTime = AlarmTime.HR_6;
+                 alarmIndex = HR_6;
                 break;
             case "12 hr":
-                alarmTime = AlarmTime.HR_12;
+                 alarmIndex = HR_12;
                 break;
             case "1 day":
-                alarmTime = AlarmTime.DAY_1;
+                 alarmIndex = DAY_1;
                 break;
             default:
-                alarmTime = AlarmTime.NO_SETTING;
+                 alarmIndex = NO_SETTING;
         }
-        return alarmTime;
+        return alarmIndex;
+    }
+
+    public static Long alarm_string_to_milis (String str){
+        int oneHourInMilis = 60 * 60 * 1000;
+        int milis;
+        switch(str){
+            case "----":
+                milis = 0;
+                break;
+            case "30 min":
+                milis = oneHourInMilis / 2;
+                break;
+            case "1 hr":
+                milis = oneHourInMilis;
+                break;
+            case "2 hr":
+                milis = oneHourInMilis * 2;
+                break;
+            case "6 hr":
+                milis = oneHourInMilis * 6;
+                break;
+            case "12 hr":
+                milis = oneHourInMilis * 12;
+                break;
+            case "1 day":
+                milis = oneHourInMilis * 24;
+                break;
+            default:
+                milis = 0;
+        }
+
+        return Long.valueOf(milis);
     }
 }

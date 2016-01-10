@@ -13,6 +13,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,7 +38,6 @@ import com.pchsu.simpletodo.service.AlarmReceiver;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -49,6 +49,7 @@ public class ItemEditFragment extends DialogFragment
         implements CalendarDatePickerDialogFragment.OnDateSetListener,
                     RadialTimePickerDialogFragment.OnTimeSetListener{
 
+    public static final String TAG_ITEM_EDIT = ItemEditFragment.class.getSimpleName();
     public static final String TAG_DATE_PICKER  = "DATE_PICKER";
     public static final String TAG_TIME_PICKER  = "TIME_PICKER";
 
@@ -63,6 +64,7 @@ public class ItemEditFragment extends DialogFragment
 
     TaskItem mItem;
     Communication mCallback;
+    Calendar mCalendarOfAlarm;
     boolean mIsNew;
 
     static public ItemEditFragment newInstance (String title){
@@ -104,6 +106,9 @@ public class ItemEditFragment extends DialogFragment
         super.onCreateView(inflater, container, savedInstanceState);
         View v = inflater.inflate(R.layout.item_editor, container, false);
         ButterKnife.bind(this, v);
+
+        // initialization
+        mCalendarOfAlarm = Calendar.getInstance(TimeZone.getDefault());
 
         // set up the spinner for priority selection
         ArrayAdapter<CharSequence> adapter_priority = ArrayAdapter.createFromResource(getActivity(),
@@ -176,7 +181,7 @@ public class ItemEditFragment extends DialogFragment
             }else{ // initialize the fields in the fragment
                 mEditTitle.setText(mItem.getTitle());
                 mSpinnerPriority.setSelection(mItem.getPriority());
-                mSpinnerAlarm.setSelection((mItem.getAlarmTime().getValue()));
+                mSpinnerAlarm.setSelection(mItem.getAlarmIndex());
                 mEditNote.setText(mItem.getNote());
                 mButtonDate.setText(mItem.getDate());
                 mButtonTime.setText(mItem.getTime());
@@ -283,22 +288,24 @@ public class ItemEditFragment extends DialogFragment
                     dismiss();
                     return;
                 }
-                // check if alarm is set and date/time not set, abort the save and warn the user
-                if (!alarmSettingOK()){ return;}
+                // check if alarm is set and date/time not set
+                // when it fails, abort the save action and warn the user
+                if (!alarmSettingOK()){
+                    return;
+                }
 
                 // all the checks pass ; now the data is valid and ready to be inserted into db
-                // db item insertion happens here
+                // preparing all the data and then inserting the item
                 mItem.setTitle(mEditTitle.getText().toString());
                 mItem.setNote(mEditNote.getText().toString());
 
                 int priority = TaskItem.priority_string_to_index(mSpinnerPriority.getSelectedItem().toString());
                 mItem.setPriority(priority);
 
-                TaskItem.AlarmTime alarmTime = TaskItem.alarm_string_to_index(mSpinnerAlarm.getSelectedItem().toString());
-                mItem.setAlarmTime(alarmTime);
-                if(alarmTime != TaskItem.AlarmTime.NO_SETTING){
-                    setAlarm();
-                }
+                int alarmIndex = TaskItem.alarm_string_to_index(mSpinnerAlarm.getSelectedItem().toString());
+                mItem.setAlarmIndex(alarmIndex);
+                Long alarmMilis = TaskItem.alarm_string_to_milis(mSpinnerAlarm.getSelectedItem().toString());
+                mItem.setAlarmMilis(alarmMilis);
 
                 final String date_str = mButtonDate.getText().toString();
                 final String str_set_date =  getResources().getText(R.string.label_set_date).toString();
@@ -311,6 +318,13 @@ public class ItemEditFragment extends DialogFragment
                     mItem.setTime(time_str);
                 }
                 mItem.save();
+
+                // set up the alarm notification AFTER the item is inserted into db
+                // This order is required because the rowid will be used
+                if(alarmIndex != TaskItem.NO_SETTING){
+                    Long alarmTimeMilis = getAlarmTimeMilis();
+                    setAlarm(alarmTimeMilis);
+                }
 
                 List<TaskItem> items = new Select()
                         .from(TaskItem.class)
@@ -362,7 +376,7 @@ public class ItemEditFragment extends DialogFragment
 
     @Override
     public void onDateSet(CalendarDatePickerDialogFragment dialog, int year, int month, int day) {
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
         calendar.set(year, month, day);
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy", Locale.US);
         dateFormat.setTimeZone(calendar.getTimeZone());
@@ -371,7 +385,7 @@ public class ItemEditFragment extends DialogFragment
 
     @Override
     public void onTimeSet(RadialTimePickerDialogFragment dialog, int hourOfDay, int minute) {
-        Calendar calendar = Calendar.getInstance();
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
         calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
         calendar.set(Calendar.MINUTE, minute);
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.US);
@@ -385,8 +399,8 @@ public class ItemEditFragment extends DialogFragment
         final String time_str = mButtonTime.getText().toString();
         final String str_set_date =  getResources().getText(R.string.label_set_date).toString();
         final String str_set_time =  getResources().getText(R.string.label_set_time).toString();
-        TaskItem.AlarmTime alarmTime = TaskItem.alarm_string_to_index(mSpinnerAlarm.getSelectedItem().toString());
-        if( alarmTime != TaskItem.AlarmTime.NO_SETTING){
+        int alarmIndex = TaskItem.alarm_string_to_index(mSpinnerAlarm.getSelectedItem().toString());
+        if( alarmIndex != TaskItem.NO_SETTING){
             if (date_str.equalsIgnoreCase(str_set_date) || time_str.equalsIgnoreCase(str_set_time)){
                 Toast.makeText(getActivity(), "Warning: to use alarm. Please set date/time!", Toast.LENGTH_LONG).show();
                 return false;
@@ -395,29 +409,67 @@ public class ItemEditFragment extends DialogFragment
         return true;
     }
 
-    private void setAlarm() {
+    // read "mili seconds before the due time"
+    // subtract it from the due time to get the alarm time
+    private Long getAlarmTimeMilis(){
+
+        final String date = mItem.getDate();
+        final String time = mItem.getTime();
+        final Long alarmMilis = mItem.getAlarmMilis();
+
+        Calendar calendar_alarm = Calendar.getInstance(TimeZone.getDefault());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm", Locale.US);
+        try {
+            calendar_alarm.setTime(dateFormat.parse(date + " " + time));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        Log.d(TAG_ITEM_EDIT, "alarm: " +  calendar_alarm.getTimeInMillis() + " - " + alarmMilis);
+        return (calendar_alarm.getTimeInMillis() - alarmMilis);
+    }
+
+    private void setAlarm(Long milis) {
+        // null pointer checking : make sure the item is valid
         if (mItem == null) {
-            //TODO error msg
+            Log.e(TAG_ITEM_EDIT, "setAlarm mItem null");
             return;
-        } else if (mItem.getTitle() == null || mItem.getNote() == null) {
-            //TODO error msg
+        } else if (mItem.getId() == null){
+            Log.e(TAG_ITEM_EDIT, "setAlarm mItem.getId() null");
+            return;
+        } else if (mItem.getTitle() == null){
+            Log.e(TAG_ITEM_EDIT, "setAlarm mItem.getTitle() null");
+            return;
+        } else if (mItem.getNote() == null) {
+            Log.e(TAG_ITEM_EDIT, "setAlarm mItem.getNote() null");
             return;
         }
 
+        // reading data fields from the item
+        final int id = mItem.getId().intValue();
         final String title = mItem.getTitle();
         final String note = mItem.getNote();
-        Long alertTime = new GregorianCalendar().getTimeInMillis()+3*1000;
+
+        //For testing during the development phrase ; 3 seconds delay from the current time
+        //Long alertTime = new GregorianCalendar().getTimeInMillis()+3*1000;
+
+        // setting up the intent with data
         Intent alertIntent = new Intent(getActivity(), AlarmReceiver.class);
         alertIntent.putExtra(Constant.TAG_TITLE,title);
         alertIntent.putExtra(Constant.TAG_NOTE, note);
         alertIntent.setAction(title);
 
+        // setting up AlarmManager
+        // passing the rowid for identifying each alarm (cancel/modify use)
         AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
-        alarmManager.set(AlarmManager.RTC_WAKEUP, alertTime,
-                PendingIntent.getBroadcast(getActivity(), 0, alertIntent, PendingIntent.FLAG_UPDATE_CURRENT));
-        alarmManager.set(AlarmManager.RTC_WAKEUP, alertTime+10000,
-                PendingIntent.getBroadcast(getActivity(),0 , alertIntent,PendingIntent.FLAG_UPDATE_CURRENT));
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, milis,
+                PendingIntent.getBroadcast(getActivity(), id, alertIntent, PendingIntent.FLAG_UPDATE_CURRENT));
 
+        // DEBUG USE:  print out alarm setting information
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm", Locale.US);
+        calendar.setTimeInMillis(milis);
+        Log.d(TAG_ITEM_EDIT, title + " " + id + " " + milis + " " + dateFormat.format(calendar.getTime()));
     }
 
     /*

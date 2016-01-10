@@ -49,11 +49,6 @@ public class MainActivity extends AppCompatActivity implements ItemEditFragment.
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-       /* TaskItem a = TaskItem.newInstance("buy book", "no note", "2015-12-12", TaskItem.PRIORITY_HIGH);
-        TaskItem b = TaskItem.newInstance("take exam", "no note", "2016-03-01", TaskItem.PRIORITY_LOW);
-        TaskItem c = TaskItem.newInstance("xmas", "no note", "2015-12-25", TaskItem.PRIORITY_MED);
-        a.save(); b.save(); c.save();*/
-
         mItems = new Select()
                 .from(TaskItem.class)
                 .orderBy("Priority DESC")
