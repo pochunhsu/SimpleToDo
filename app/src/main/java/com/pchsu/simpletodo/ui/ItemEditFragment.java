@@ -448,14 +448,17 @@ public class ItemEditFragment extends DialogFragment
         // reading data fields from the item
         final int id = mItem.getId().intValue();
         final String title = mItem.getTitle();
+        final String date = mItem.getDate();
+        final String time = mItem.getTime();
         final String note = mItem.getNote();
+        final String title_notif = title + " :  " + date + " " + time;
 
         //For testing during the development phrase ; 3 seconds delay from the current time
         //Long alertTime = new GregorianCalendar().getTimeInMillis()+3*1000;
 
         // setting up the intent with data
         Intent alertIntent = new Intent(getActivity(), AlarmReceiver.class);
-        alertIntent.putExtra(Constant.TAG_TITLE,title);
+        alertIntent.putExtra(Constant.TAG_TITLE,title_notif);
         alertIntent.putExtra(Constant.TAG_NOTE, note);
         alertIntent.setAction(title);
 
